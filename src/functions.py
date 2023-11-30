@@ -6,12 +6,13 @@ from torch.utils.data import Dataset
 from PIL import Image, ImageFile
 
 def parse_args():
+    '''Function to parse arguments for a general training function'''
     parser = argparse.ArgumentParser()
     parser.add_argument('-e', type=int, help='epochs')
     parser.add_argument('-b', type=int, help='batch size')
     parser.add_argument('-w', type=int, help='weight decay')
-    parser.add_argument('-l', type=str, help='weight file')
-    parser.add_argument('-p', type=str, help='Loss output image')
+    parser.add_argument('-l', type=str, help='weight file without .pth, will be appended during training')
+    parser.add_argument('-p', type=str, help='Loss output image, full path')
     parser.add_argument('-cuda', type=str, help='[Y/N] for gpu usage')
     opt = parser.parse_args()
     batch_size = opt.b
@@ -28,6 +29,7 @@ def parse_args():
     return batch_size, epochs, weight_file, loss_image, device, weight_decay
 
 class custom_dataset(Dataset):
+    '''Dataset class for custom datasets'''
     def __init__(self, dir, label_file, transform=None):
         super().__init__()
         Image.MAX_IMAGE_PIXELS = None
@@ -52,8 +54,9 @@ class custom_dataset(Dataset):
         # print('break 27: ', index, image, image_sample.shape)
         return image_sample, label
 
-
+# Code adapted from https://colab.research.google.com/drive/1TrhEfI3stJ-yNp7_ZxUAtfWjj-Qe_Hym?usp=sharing
 def accuracy_loss(model, dl, device, loss_fn):
+    '''Function to calculate the accuracy and loss for a classification model'''
     model.eval()
     correct = 0
     total = 0
@@ -70,8 +73,8 @@ def accuracy_loss(model, dl, device, loss_fn):
     return 100*correct/total, loss
 
 def loss_autoencoder(model, dl, device, loss_fn):
+    '''Function to calculate the loss for a model'''
     model.eval()
-    correct = 0
     loss = 0
     with torch.no_grad():
         for data in dl:
@@ -81,7 +84,8 @@ def loss_autoencoder(model, dl, device, loss_fn):
             loss += loss_fn(outputs, inputs).cpu().item() / len(dl)
     return loss
 
-def train(model, n_epochs, train_dl, test_dl, device, optimizer, scheduler, loss_fn, loss_file, autoencoder=False):
+def train(model, n_epochs, train_dl, test_dl, device, optimizer, scheduler, loss_fn, loss_file, weight_file, autoencoder=False):
+    '''Function to train autoencoder and classifier'''
     model.train()
     print("Training...")
     losses_list = []
@@ -90,26 +94,26 @@ def train(model, n_epochs, train_dl, test_dl, device, optimizer, scheduler, loss
     for epoch in range(n_epochs):
         loss_epoch = 0.0
         index = 0
+
+        # Iterate over batches
         for imgs, labels in train_dl:
             index += 1
-            input_ims = imgs.to(device)
-            labels = labels.to(device)
-
+            imgs.to(device)
+            labels.to(device)
             optimizer.zero_grad()
+            output = model(imgs)
 
-            output = model(input_ims)
             if autoencoder == True:
-                loss = loss_fn(output, input_ims)
+                loss = loss_fn(output, imgs) # Loss calculated on input and recreation
             else:
-                loss = loss_fn(output, labels)
+                loss = loss_fn(output, labels) # Loss calculated on prediction and ground truth
 
             loss.backward()
             optimizer.step()
 
             loss_epoch += loss.item()
-            if index % 500 == 0:
-                print(f"Batch {index} loss: {loss}")
-
+        
+        # Finished epoch now validate on test loader
         if autoencoder == True:
             test_l = loss_autoencoder(model, test_dl, device, loss_fn)
             print(f"Test loss epoch {epoch}: {test_l}")
@@ -119,14 +123,20 @@ def train(model, n_epochs, train_dl, test_dl, device, optimizer, scheduler, loss
             print(f"Test accuracy epoch {epoch}: {test_a}")
             test_accuracy.append(test_a)
             test_loss.append(test_l)
-        model.train()
+
+        # Print loss for each epoch
         losses_list.append(loss_epoch / index)
         print(f"Epoch {epoch} loss: {losses_list[epoch]}")
-        if epoch % 10 == 0 or epoch == n_epochs-1:
-            state_dict = model.state_dict()
-            torch.save(state_dict, f"./saved_train/euclid_autoencoder_v7_epoch_{epoch}.pth")
-        scheduler.step()
 
+        # Periodically save weight files
+        if epoch % 10 == 0 or epoch == n_epochs:
+            state_dict = model.state_dict()
+            torch.save(state_dict, f"{weight_file}_{epoch}.pth")
+
+        model.train() # Call after testing
+        scheduler.step() 
+        
+    # Plot loss graph and save to .png
     plt.plot(losses_list, label="Train Loss")
     plt.plot(test_loss, label="Val Loss")
     plt.xlabel("Epoch")

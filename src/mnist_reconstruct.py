@@ -141,6 +141,8 @@ def interpolate(state_dict='MLP.8.pth'):
 
     test = 1
 
+state_dict = None
+
 #Get command line arguments
 argv = sys.argv[1:]
 try:
@@ -154,7 +156,7 @@ for name, value in options:
     if name in ['-l']:
         state_dict = value
 
-state_dict = 'euclid_autoencoder_v7_epoch_99.pth'
+
 #Call functions for each desired output
 reconstruction(state_dict)
 reconstruction(state_dict)

@@ -9,10 +9,6 @@ from torchvision import transforms
 # Parse arguments
 batch_size, n_epochs, weight_file, loss_image, device, weight_decay = functions.parse_args()
 
-n_epochs = 100
-loss_image = './loss_graph/loss_euclid_autoencoder_negative_1over2_V7.png'
-device = 'cuda'
-
 # Prepare dataloaders
 train_transform = transforms.Compose([transforms.ToTensor(), torch.flatten])
 test_transform = transforms.Compose([transforms.ToTensor(), torch.flatten])

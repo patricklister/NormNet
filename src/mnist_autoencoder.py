@@ -26,4 +26,4 @@ optimizer = opt.Adam(model.parameters(), lr=1e-3)
 scheduler = opt.lr_scheduler.ExponentialLR(optimizer, gamma=1)
 loss_fn=torch.nn.BCELoss(reduction='sum')
 
-functions.train(model, n_epochs, train_loader, val_loader, device, optimizer, scheduler, loss_fn=loss_fn, loss_file=loss_image, autoencoder=True)
+functions.train(model, n_epochs, train_loader, val_loader, device, optimizer, scheduler, loss_fn=loss_fn, loss_file=loss_image, autoencoder=True, weight_file=weight_file)

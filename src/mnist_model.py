@@ -37,7 +37,7 @@ class Euclid_Squared(Function):
         grad_input = (input_b-weights_b)*grad_output_b
         grad_input_s = grad_input.sum(2)
 
-        #test = 1/0 - For debugging backward pass, doesn't like vscode breakpoints, maybe because it's calling C++ engine eventually?
+        #test = 1/0 #- For debugging backward pass, doesn't like vscode breakpoints, maybe because it's calling C++ engine eventually?
         
         return -grad_input_s, -grad_weights
 
@@ -80,7 +80,7 @@ class mnist_classifier(nn.Module):
         X = self.bn3(X)
         return X
 
-# FIXME: Fix autoencoder, something wrong with loss function I think
+
 class mnistautoencoder(nn.Module):
     def __init__(self, N_input=784, N_bottleneck=8, N_output=784):
         super(mnistautoencoder, self).__init__()

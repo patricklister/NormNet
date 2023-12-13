@@ -10,19 +10,12 @@ from torchvision import transforms
 
 batch_size, n_epochs, weight_file, loss_image, device, weight_decay = functions.parse_args()
 
-n_epochs = 25
-loss_image = './loss_graph/loss_euclid_classifier_v1.png'
-device = 'cuda'
-
-
 train_transform = transforms.Compose([transforms.ToTensor(), torch.flatten])
 
 train_set = MNIST('./data/mnist', train=True, download=True,
 transform=train_transform)
 validation_set = MNIST('./data/mnist', train=False, download=True,
 transform=train_transform)
-
-device = 'cuda'
 
 model = mnist_model.mnist_classifier()
 model.to(device)
@@ -33,5 +26,5 @@ val_loader = DataLoader(validation_set, batch_size=512, shuffle=True)
 optimizer = opt.Adam(model.parameters(), lr=1e-3)
 scheduler = opt.lr_scheduler.ExponentialLR(optimizer, gamma=1)
 
-functions.train(model, n_epochs, train_loader, val_loader, device, optimizer, scheduler, loss_fn=torch.nn.CrossEntropyLoss(), loss_file=loss_image)
+functions.train(model, n_epochs, train_loader, val_loader, device, optimizer, scheduler, loss_fn=torch.nn.CrossEntropyLoss(), loss_file=loss_image, weight_file=weight_file)
 

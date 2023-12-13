@@ -98,8 +98,8 @@ def train(model, n_epochs, train_dl, test_dl, device, optimizer, scheduler, loss
         # Iterate over batches
         for imgs, labels in train_dl:
             index += 1
-            imgs.to(device)
-            labels.to(device)
+            imgs = imgs.to(device)
+            labels = labels.to(device)
             optimizer.zero_grad()
             output = model(imgs)
 
